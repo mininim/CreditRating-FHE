@@ -115,12 +115,13 @@ void MainWindow::checkScore() {
         return;
     }
 
-    QString customerId = customerTable->item(customerRow, 0)->text();
-    QString companyName = companyTable->item(companyRow, 0)->text();
+    QString qcustomerId = customerTable->item(customerRow, 0)->text();
+    QString qcompanyName = companyTable->item(companyRow, 0)->text();
 
 
     /* 변수 설정 */
-    std::string customerId.toStdString();
+    std::string customerId = qcustomerId.toStdString();
+    std::string companyName = qcompanyName.toStdString();
     double creditScore = 0.0;
     double debtScore, assetScore, phoneScore;
 
