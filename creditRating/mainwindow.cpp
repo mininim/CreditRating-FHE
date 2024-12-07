@@ -86,7 +86,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     QHBoxLayout *buttonLayout = new QHBoxLayout;
     buttonLayout->addStretch(); // 左侧弹性空白
     buttonLayout->addWidget(scoreLabel);
-    buttonLayout->addStretch(); // 右侧弹性空白\
+    buttonLayout->addStretch(); // 右侧弹性空白
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
     mainLayout->addWidget(generateKeyButton);
