@@ -114,3 +114,25 @@ void processCSV(
     }
     file.close();
 }
+
+// processCSV 함수
+LoanData processCSV(const std::string& filePath) {
+    LoanData data;
+
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filePath << std::endl;
+        return data;
+    }
+
+    std::string header;
+    std::getline(file, header);
+
+    std::string line;
+    while (std::getline(file, line)) {
+        processLine(line, data.reasonCodes, data.institutionCodes, data.categoryVector, data.reasonVector, data.institutionVector, data.dateVector, data.amountVector, data.repaymentStatusVector);
+    }
+    file.close();
+
+    return data;
+}

@@ -44,4 +44,17 @@ void debugVector(const std::string& vectorName, const std::vector<T>& vec) {
     std::cout << std::endl << std::endl;
 }
 
+struct LoanData {
+    std::map<std::string, int> reasonCodes;
+    std::map<std::string, int> institutionCodes;
+    std::vector<std::string> categoryVector;
+    std::vector<int> reasonVector;
+    std::vector<int> institutionVector;
+    std::vector<int> dateVector;
+    std::vector<int> amountVector;
+    std::vector<int> repaymentStatusVector;
+};
+
+
+LoanData processCSV(const std::string& filePath);
 #endif 
