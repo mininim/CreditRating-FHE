@@ -2,6 +2,10 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
+
+#include "openfhe.h"
+using namespace lbcrypto;
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     this->setWindowTitle("신용 평가 시스템");
     this->resize(600, 400);
