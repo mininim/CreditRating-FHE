@@ -21,7 +21,7 @@ using namespace lbcrypto;
 
 int main() {
     // 데이터 전처리--------------------------------------------------
-    // 파일 경로 (필요시 적절한 경로로 변경)
+    // 파일 경로 (build 파일 기준으로 설정)
     std::string filePath = "../creditRating/loan_data_100.csv";
 
     // 대출 사유와 대출 기관의 고유 코드를 매핑할 맵
@@ -114,15 +114,42 @@ int main() {
     auto encAmountVector = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(amountVectorDouble));
     auto encRepaymentStatusVector = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(repaymentStatusVectorDouble));
 
-    // 가중치 벡터 암호화
-    auto encReasonWeights = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(weightReasonVectorDouble));
-    auto encInstitutionWeights = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(weightInstitutionVectorDouble));
-    auto encRepaymentWeights = cc->Encrypt(keyPair.publicKey, cc->MakeCKKSPackedPlaintext(weightRepaymentStatusVectorDouble));
-
     // 암호화된 벡터 곱셈
-    auto weight1calc = cc->EvalMultAndRelinearize(encAmountVector, encReasonWeights);
-    auto weight2calc = cc->EvalMultAndRelinearize(weight1calc, encInstitutionWeights);
-    auto weight3calc = cc->EvalMultAndRelinearize(weight2calc, encRepaymentWeights);
+    auto weight1calc = cc->EvalMult(
+        encReasonVector, cc->MakeCKKSPackedPlaintext(weightReasonVectorDouble);
+    auto weight2calc = cc->EvalMult(
+        weight1calc, cc->MakeCKKSPackedPlaintext(weightInstitutionVectorDouble);    
+    auto weight3calc = cc->EvalMult(
+        weight2calc, cc->MakeCKKSPackedPlaintext(weightRepaymentStatusVectorDouble);
+    auto ctxCalcResult = cc->EvalMult(
+        encAmountVector, cc->MakeCKKSPackedPlaintext(weightReasonVectorDouble)
+
+    Plaintext decrypted_ptx;
+    cc->Decrypt(keyPair.secretKey, ctxSum, &decrypted_ptx);
+    decrypted_ptx->SetLength(1);
+
+    std::cout << "Final Total Sum: " << totalSum << std::endl;
+
+    // 결과를 저장할 벡터
+    std::vector<double> result;
+
+    // 각 요소를 곱하여 결과 벡터에 추가
+    for (size_t i = 0; i < amountVectorDouble.size(); ++i) {
+        result.push_back(
+            amountVectorDouble[i] *
+            weightReasonVectorDouble[i] *
+            weightInstitutionVectorDouble[i] *
+            weightRepaymentStatusVectorDouble[i]
+        );
+    }
+    // 결과 출력
+    std::cout << "평문 계산: ";
+    for (double val : result) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+
+
 
     return 0;
 }
