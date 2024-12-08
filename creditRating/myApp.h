@@ -51,6 +51,9 @@ public:
 
     // Initialize OpenFHE context
     void initializeEncryptionContext();
+
+    // Evaluate credit score for a given user and company
+    void evaluateAndPrintCreditScore(const std::string& customerId, const std::string& companyId);
 };
 
 #endif 
