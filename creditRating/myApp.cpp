@@ -176,18 +176,18 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
         originalResult.push_back(result);
     }
 
-
+    // 유찬 ------------------------------------------------------------
 
     double assetScore, phoneScore;
     // Key Generation
     auto keyPair = cc->KeyGen();
     cc->EvalMultKeyGen(keyPair.secretKey);
-    /* asset score 계산 부분 */
+    /* asset score 계산 부분 */     
     // CSV 파일 읽기
     std::string assetFilename;
-    if (id == "0") {assetFilename = "asset_0.csv";}
-    else if (id == "1") {assetFilename = "asset_1.csv";}
-    else if (id == "2") {assetFilename = "asset_2.csv";}
+    if (customerId == "0") {assetFilename = "../creditRating/asset_0.csv";}
+    else if (customerId == "1") {assetFilename = "../creditRating/asset_1.csv";}
+    else if (customerId == "2") {assetFilename = "../creditRating/asset_2.csv";}
     std::ifstream file(assetFilename);
     std::string line;
     Ciphertext<DCRTPoly> totalSumCiphertext;
@@ -227,26 +227,26 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     }
     file.close();
     // 최종 합산된 결과 복호화
-    Plaintext decrypted_ptx;
-    cc->Decrypt(keyPair.secretKey, totalSumCiphertext, &decrypted_ptx);
-    decrypted_ptx->SetLength(1);
+    Plaintext u_decrypted_ptx;
+    cc->Decrypt(keyPair.secretKey, totalSumCiphertext, &u_decrypted_ptx);
+    u_decrypted_ptx->SetLength(1);
     // 최종 결과 출력
-    std::vector<double> decryptedMsg = decrypted_ptx->GetRealPackedValue();
-    if (decryptedMsg[0] > 100000) {decryptedMsg[0] = 100000;}
-    assetScore = decryptedMsg[0] / 100000 * 300;
+    std::vector<double> u_decryptedMsg = u_decrypted_ptx->GetRealPackedValue();
+    if (u_decryptedMsg[0] > 100000) {u_decryptedMsg[0] = 100000;}
+    assetScore = u_decryptedMsg[0] / 100000 * 300;
 
     /* phone score 계산 */
     std::vector<double> zeroVec = {0.0}; // 0 값을 가진 벡터
     Plaintext zeroPlaintext = cc->MakeCKKSPackedPlaintext(zeroVec);
-    auto encryptedResult = cc->Encrypt(keyPair.publicKey, zeroPlaintext); // 암호화된 0 값
+    auto u_encryptedResult = cc->Encrypt(keyPair.publicKey, zeroPlaintext); // 암호화된 0 값
     std::vector<double> zeroVec2 = {0.0}; // 0 값을 가진 벡터
     Plaintext zeroPlaintext2 = cc->MakeCKKSPackedPlaintext(zeroVec);
     auto encryptedMax = cc->Encrypt(keyPair.publicKey, zeroPlaintext); // 암호화된 0 값
     // CSV 파일을 읽기
     std::string phoneFilename;
-    if (id == "0") {phoneFilename = "phone_0.csv";}
-    else if (id == "1") {phoneFilename = "phone_1.csv";}
-    else if (id == "2") {phoneFilename = "phone_2.csv";}
+    if (customerId == "0") {phoneFilename = "phone_0.csv";}
+    else if (customerId == "1") {phoneFilename = "phone_1.csv";}
+    else if (customerId == "2") {phoneFilename = "phone_2.csv";}
     std::ifstream file_(phoneFilename);
     std::getline(file_, line); // 헤더 건너뛰기
     while (std::getline(file_, line)) {
@@ -266,25 +266,26 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
         // 암호화된 상태에서 차이 계산 (ctx1 - ctx2)
         auto encryptedDiff = cc->EvalSub(ctx1, ctx2);
         // 누적
-        encryptedResult = cc->EvalAdd(encryptedResult, encryptedDiff);
+        u_encryptedResult = cc->EvalAdd(u_encryptedResult, encryptedDiff);
         encryptedMax = cc->EvalAdd(encryptedMax, ctx1);
     }
     // 최종 결과 복호화
-    Plaintext decryptedResult;
-    cc->Decrypt(keyPair.secretKey, encryptedResult, &decryptedResult);
-    decryptedResult->SetLength(1); // 복호화된 결과 길이 설정
-    std::vector<double> decryptedMsg_ = decryptedResult->GetRealPackedValue();
+    Plaintext u_decryptedResult;
+    cc->Decrypt(keyPair.secretKey, u_encryptedResult, &u_decryptedResult);
+    u_decryptedResult->SetLength(1); // 복호화된 결과 길이 설정
+    std::vector<double> u_decryptedResult_ = u_decryptedResult->GetRealPackedValue();
     // 최종 결과 복호화
-    Plaintext decryptedResult2;
-    cc->Decrypt(keyPair.secretKey, encryptedMax, &decryptedResult2);
-    decryptedResult2->SetLength(1); // 복호화된 결과 길이 설정
-    std::vector<double> decryptedMsg2 = decryptedResult2->GetRealPackedValue();
-    phoneScore = (1 - decryptedMsg_[0] / decryptedMsg2[0]) * 300.0;
+    Plaintext u_decryptedResult2;
+    cc->Decrypt(keyPair.secretKey, encryptedMax, &u_decryptedResult2);
+    u_decryptedResult2->SetLength(1); // 복호화된 결과 길이 설정
+    std::vector<double> u_decryptedMsg2 = u_decryptedResult2->GetRealPackedValue();
+    phoneScore = (1 - u_decryptedMsg2[0] / u_decryptedMsg2[0]) * 300.0;
     
+    std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << "phoneScore "  << phoneScore << std::endl;
 
     /*************/
 
-
+    
 
 
 
