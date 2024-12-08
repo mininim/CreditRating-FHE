@@ -22,8 +22,6 @@ cmake_minimum_required(VERSION 3.16)
 project(credit VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -63,8 +61,12 @@ else()
     endif()
 endif()
 
-target_link_libraries(credit PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
-
+target_link_libraries(credit
+    PUBLIC OPENFHEcore
+    PUBLIC OPENFHEpke
+    PUBLIC OPENFHEbinfhe
+    PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
+)
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
