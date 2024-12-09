@@ -84,18 +84,43 @@ void MyApp::initializeAllUsers(const std::string& baseFilePath) {
 
 // Initialize all companies' weights, generate keys, and encrypt
 void MyApp::initializeAllCompanies() {
+
     for (const auto& [companyId, reportType, description] : companyData) {
         // Step 1: Initialize Weights
+    if (companyId == "A") {
         companyWeightsMap[companyId] = Weights(
-            {1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5, 2.8, 3.0, 3.5}, // reasonWeights
-            {1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 2.0}, // institutionWeights
-            {0.5, 1.0}                                          // repaymentWeights
+            {0.02, 0.021, 0.022, 0.023, 0.024, 0.025, 0.026, 0.027, 0.028, 0.029}, // reasonWeights
+            {0.03, 0.031, 0.032, 0.03, 0.034, 0.035, 0.036, 0.037, 0.038, 0.039}, // institutionWeights
+            {0.06, 0.11}                                                  // repaymentWeights
         );
-
+    } else if (companyId == "B") {
+        companyWeightsMap[companyId] = Weights(
+            {0.015, 0.016, 0.017, 0.018, 0.019, 0.02, 0.021, 0.022, 0.023, 0.024}, // reasonWeights
+            {0.025, 0.026, 0.027, 0.028, 0.029, 0.03, 0.031, 0.032, 0.033, 0.034}, // institutionWeights
+            {0.055, 0.105}                                                // repaymentWeights
+        );
+    } else if (companyId == "C") {
+        companyWeightsMap[companyId] = Weights(
+            {0.01, 0.012, 0.014, 0.016, 0.018, 0.02, 0.022, 0.024, 0.026, 0.028}, // reasonWeights
+            {0.02, 0.022, 0.024, 0.026, 0.028, 0.03, 0.032, 0.034, 0.036, 0.038}, // institutionWeights
+            {0.05, 0.01}                                                 // repaymentWeights
+        );
+    } else {
+        companyWeightsMap[companyId] = Weights(
+            {0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19}, // reasonWeights
+            {0.1, 0.11, 0.12, 0.13, 0.14, 0.15, 0.16, 0.17, 0.18, 0.19}, // institutionWeights
+            {0.5, 1.0}                                                 // repaymentWeights
+        );
+    }
         // Step 2: Generate Keys
         auto keyPair = cc->KeyGen();
         cc->EvalMultKeyGen(keyPair.secretKey);
-        companyKeyPairs[companyId] = keyPair;
+
+        // Rotate Key Set
+        // std::vector<int> rotationIndexes(257); // 257 = 128 - (-128) + 1
+        // std::iota(rotationIndexes.begin(), rotationIndexes.end(), -128);
+        // cc->EvalRotateKeyGen(keyPair.secretKey, rotationIndexes);
+        // companyKeyPairs[companyId] = keyPair;
 
         // Step 3: Encrypt Weights
         const Weights& weights = companyWeightsMap.at(companyId);
@@ -149,19 +174,34 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     // Perform encrypted evaluation
     auto weight1calc = cc->EvalMult(encAmountVector, weightReasonVectorPlaintext);
     auto weight2calc = cc->EvalMult(weight1calc, weightInstitutionVectorPlaintext);
-    auto weight3calc = cc->EvalMult(weight2calc, weightRepaymentStatusVectorPlaintext);
-    auto ctxCalcResult = weight3calc;
+    auto ctxCalcResult = cc->EvalMult(weight2calc, weightRepaymentStatusVectorPlaintext);
+
+
+    // 암호화 상태에서 연산     Rotate Sum
+    // Ciphertext<DCRTPoly> ctxSum = ctxCalcResult; // Start with the original ciphertext
+    // size_t vectorSize = loanData.amountVector.size(); // Number of elements in the vector
+
+    // for (size_t i = 1; i < vectorSize; i++) {
+    //     // Rotate the ciphertext to the right by i positions
+    //     auto ctxRot = cc->EvalRotate(ctxCalcResult, i);
+    
+    //     // Add the rotated ciphertext to the current sum
+    //     ctxSum = cc->EvalAdd(ctxSum, ctxRot);
+    // }
+
+
 
     // Decrypt the result
-    Plaintext decrypted_ptx;
+    Plaintext m_decrypted_ptx;
     auto secretKey = customerKeyPairs.at(customerId).secretKey; // Retrieve the user's secret key
-    cc->Decrypt(secretKey, ctxCalcResult, &decrypted_ptx);
-    decrypted_ptx->SetLength(loanData.amountVector.size());
-
+    cc->Decrypt(secretKey, ctxCalcResult, &m_decrypted_ptx);
+    m_decrypted_ptx->SetLength(loanData.amountVector.size());
     // Get decrypted value
-    std::vector<double> decryptedMsg = decrypted_ptx->GetRealPackedValue();
+    std::vector<double> m_decryptedMsg = m_decrypted_ptx->GetRealPackedValue();
+    double m_sum = std::accumulate(m_decryptedMsg.begin(), m_decryptedMsg.end(), 0.0);
+    
 
-    // Compute the same operation without encryption
+    // For Debug Compute the same operation without encryption
     std::vector<double> originalAmountVector(loanData.amountVector.begin(), loanData.amountVector.end());
     std::vector<double> weightReasonVector(weights.reasonWeights.begin(), weights.reasonWeights.end());
     std::vector<double> weightInstitutionVector(weights.institutionWeights.begin(), weights.institutionWeights.end());
@@ -175,6 +215,11 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
         result *= weightRepaymentVector[i % weightRepaymentVector.size()];
         originalResult.push_back(result);
     }
+
+    m_sum = (m_sum / 4000) * 300;
+
+
+     std::cout << "MS ---  " << customerId << " and Company " << companyId << "  :  m_sum " << m_sum  << std::endl;
 
     // 유찬 ------------------------------------------------------------
 
@@ -244,9 +289,9 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     auto encryptedMax = cc->Encrypt(keyPair.publicKey, zeroPlaintext); // 암호화된 0 값
     // CSV 파일을 읽기
     std::string phoneFilename;
-    if (customerId == "0") {phoneFilename = "phone_0.csv";}
-    else if (customerId == "1") {phoneFilename = "phone_1.csv";}
-    else if (customerId == "2") {phoneFilename = "phone_2.csv";}
+    if (customerId == "0") {phoneFilename = "../creditRating/phone_0.csv";}
+    else if (customerId == "1") {phoneFilename = "../creditRating/phone_1.csv";}
+    else if (customerId == "2") {phoneFilename = "../creditRating/phone_2.csv";}
     std::ifstream file_(phoneFilename);
     std::getline(file_, line); // 헤더 건너뛰기
     while (std::getline(file_, line)) {
@@ -283,26 +328,10 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     
     std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << "phoneScore "  << phoneScore << std::endl;
 
-    /*************/
-
-    
+    /****최종 결과 합치지***/
 
 
 
-  
-    // Print the decrypted result
-    std::cout << "Decrypted Credit Score for Customer " << customerId << " and Company " << companyId << ":" << std::endl;
-    for (double val : decryptedMsg) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
-    // Print the non-encrypted computed result
-    std::cout << "Non-encrypted Credit Score for Customer " << customerId << " and Company " << companyId << ":" << std::endl;
-    for (double val : originalResult) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
 }
 
 
@@ -334,12 +363,22 @@ int main() {
     // 모든 회사의 가중치를 초기화, 키 생성, 암호화
     app.initializeAllCompanies();
 
-    // 특정 사용자와 회사의 신용평가 계산 및 출력
+    // 모든 사용자와 회사의 신용평가 조합 출력
     try {
-        app.evaluateAndPrintCreditScore("1", "A");
-    } catch (const std::runtime_error& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
+        for (const auto& [customerId, customerName] : customerData) {
+            for (const auto& [companyId, reportType, description] : companyData) {
+                std::cout << "Evaluating credit score for Customer ID: " << customerId
+                      << " (" << customerName << ") and Company ID: " << companyId << std::endl;
+                try {
+                    app.evaluateAndPrintCreditScore(customerId, companyId);
+                } catch (const std::runtime_error& e) {
+                    std::cerr << "Error: " << e.what() << std::endl;
+                }
+                std::cout << "---------------------------------------------" << std::endl;
+            }
+        }
+} catch (const std::exception& e) {
+    std::cerr << "Unexpected error: " << e.what() << std::endl;
+}
     return 0;
 }
