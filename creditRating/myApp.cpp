@@ -78,7 +78,7 @@ void MyApp::initializeAllUsers(const std::string& baseFilePath) {
         // Store encrypted data
         encryptedLoanDataMap[customerId] = encryptedData;
 
-        std::cout << "Processed customer ID: " << customerId << std::endl;
+        //std::cout << "Processed customer ID: " << customerId << std::endl;
     }
 }
 
@@ -141,7 +141,7 @@ void MyApp::initializeAllCompanies() {
         // Store encrypted weights
         encryptedWeightsMap[companyId] = encryptedWeights;
 
-        std::cout << "Processed company ID: " << companyId << std::endl;
+        //std::cout << "Processed company ID: " << companyId << std::endl;
     }
 }
 
@@ -219,7 +219,7 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     m_sum = (m_sum / 4000) * 300;
 
 
-     std::cout << "MS ---  " << customerId << " and Company " << companyId << "  :  m_sum " << m_sum  << std::endl;
+     //std::cout << "MS ---  " << customerId << " and Company " << companyId << "  :  m_sum " << m_sum  << std::endl;
 
     // 유찬 ------------------------------------------------------------
 
@@ -333,10 +333,10 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     else if (companyId == "C") {w__ = 1;}
     phoneScore = (1.0 - w__ * u_decryptedResult_[0] / u_decryptedMsg2[0]) * 300.0;
     
-    std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << " phoneScore "  << phoneScore << std::endl;
+    //std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << " phoneScore "  << phoneScore << std::endl;
 
     /****최종 결과 합치지***/
-
+    std::cout << "Total score: " << m_sum + assetScore + phoneScore << " (" << m_sum << ", " << assetScore << ", " << phoneScore << ")" << std::endl;
 
 
 }
