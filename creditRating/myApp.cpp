@@ -230,9 +230,9 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     /* asset score 계산 부분 */     
     // CSV 파일 읽기
     std::string assetFilename;
-    if (customerId == "0") {assetFilename = "../creditRating/asset_0.csv";}
-    else if (customerId == "1") {assetFilename = "../creditRating/asset_1.csv";}
-    else if (customerId == "2") {assetFilename = "../creditRating/asset_2.csv";}
+    if (customerId == "1") {assetFilename = "../creditRating/asset_0.csv";}
+    else if (customerId == "2") {assetFilename = "../creditRating/asset_1.csv";}
+    else if (customerId == "3") {assetFilename = "../creditRating/asset_2.csv";}
     std::ifstream file(assetFilename);
     std::string line;
     Ciphertext<DCRTPoly> totalSumCiphertext;
@@ -257,7 +257,10 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
         // (amount - instantCash) 계산
         auto ctxSub = cc->EvalSub(ctx2, ctx1);
         // (amount - instantCash) * 0.5 계산
-        std::vector<double> msg3 = {0.5};  // 0.5를 암호화
+        std::vector<double> msg3;  // 0.5를 암호화
+        if (companyId == "A") {msg3 = {0.5};}
+        else if (companyId == "B") {msg3 = {0.4};}
+        else if (companyId == "C") {msg3 = {0.3};}
         Plaintext ptx3 = cc->MakeCKKSPackedPlaintext(msg3);
         auto ctx3 = cc->Encrypt(keyPair.publicKey, ptx3);
         auto ctxWeightedAmount = cc->EvalMult(ctxSub, ctx3);
@@ -289,9 +292,9 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     auto encryptedMax = cc->Encrypt(keyPair.publicKey, zeroPlaintext); // 암호화된 0 값
     // CSV 파일을 읽기
     std::string phoneFilename;
-    if (customerId == "0") {phoneFilename = "../creditRating/phone_0.csv";}
-    else if (customerId == "1") {phoneFilename = "../creditRating/phone_1.csv";}
-    else if (customerId == "2") {phoneFilename = "../creditRating/phone_2.csv";}
+    if (customerId == "1") {phoneFilename = "../creditRating/phone_0.csv";}
+    else if (customerId == "2") {phoneFilename = "../creditRating/phone_1.csv";}
+    else if (customerId == "3") {phoneFilename = "../creditRating/phone_2.csv";}
     std::ifstream file_(phoneFilename);
     std::getline(file_, line); // 헤더 건너뛰기
     while (std::getline(file_, line)) {
@@ -324,9 +327,13 @@ void MyApp::evaluateAndPrintCreditScore(const std::string& customerId, const std
     cc->Decrypt(keyPair.secretKey, encryptedMax, &u_decryptedResult2);
     u_decryptedResult2->SetLength(1); // 복호화된 결과 길이 설정
     std::vector<double> u_decryptedMsg2 = u_decryptedResult2->GetRealPackedValue();
-    phoneScore = (1 - u_decryptedMsg2[0] / u_decryptedMsg2[0]) * 300.0;
+    double w__ = 1;
+    if (companyId == "A") {w__ = 0.9;}
+    else if (companyId == "B") {w__ = 0.8;}
+    else if (companyId == "C") {w__ = 1;}
+    phoneScore = (1.0 - w__ * u_decryptedResult_[0] / u_decryptedMsg2[0]) * 300.0;
     
-    std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << "phoneScore "  << phoneScore << std::endl;
+    std::cout << "YC ---  " << customerId << " and Company " << companyId << "  :  assetScore " << assetScore << " phoneScore "  << phoneScore << std::endl;
 
     /****최종 결과 합치지***/
 
